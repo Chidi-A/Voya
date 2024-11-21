@@ -58,6 +58,7 @@
     "split-type": "^0.3.4"
   },
   "engines": {
+    "node": ">=18",
     "pnpm": ">=9"
   }
 }
