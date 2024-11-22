@@ -1,5 +1,11 @@
 # voya
 
+## 1.1.0
+
+### Minor Changes
+
+- da4cf9f: updated the package name
+
 ## 1.0.0
 
 ### Major Changes
