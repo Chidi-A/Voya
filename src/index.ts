@@ -3,7 +3,6 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SplitType from 'split-type';
 
-
 gsap.registerPlugin(ScrollTrigger);
 
 // Initialize Lenis
@@ -196,7 +195,6 @@ window.Webflow.push(() => {
     },
   });
 
-
   // Mouse hover animation for location columns
   const locationColumns = document.querySelectorAll('.home-locations_column');
 
@@ -231,7 +229,7 @@ window.Webflow.push(() => {
     locationColumns.forEach((column) => {
       // Add the gleam class to enable the shine effect
       column.classList.add('gleam-effect');
-      
+
       column.addEventListener('mouseenter', () => {
         // Original scale animation
         gsap.to(column, {
@@ -239,7 +237,7 @@ window.Webflow.push(() => {
           duration: 0.4,
           ease: 'power2.out',
         });
-        
+
         // Animate the gleam effect
         gsap.fromTo(
           column,
@@ -329,7 +327,9 @@ window.Webflow.push(() => {
 
     featureColumns.forEach((column) => {
       const mockup = column.querySelector('.features_mockup');
-      const textElements = column.querySelectorAll('.feature-column-heading, .feature-column-paragraph');
+      const textElements = column.querySelectorAll(
+        '.feature-column-heading, .feature-column-paragraph'
+      );
 
       // Set initial state - mockup slightly visible
       if (mockup) {
@@ -361,7 +361,7 @@ window.Webflow.push(() => {
           ease: 'power3.out',
         });
 
-        textElements.forEach(element => {
+        textElements.forEach((element) => {
           gsap.to(element, {
             color: '#000000',
             duration: 0.6,
@@ -390,7 +390,7 @@ window.Webflow.push(() => {
           ease: 'power3.in',
         });
 
-        textElements.forEach(element => {
+        textElements.forEach((element) => {
           gsap.to(element, {
             color: '#ffffff',
             duration: 0.6,
@@ -531,13 +531,13 @@ window.Webflow.push(() => {
   document.head.appendChild(logoStyleSheet);
 
   // Optional: Add JavaScript hover effect if you want more control
-  logos.forEach(logo => {
+  logos.forEach((logo) => {
     logo.addEventListener('mouseenter', () => {
       gsap.to(logo, {
         filter: 'grayscale(0%)',
         opacity: 1,
         duration: 0.4,
-        ease: 'power2.out'
+        ease: 'power2.out',
       });
     });
 
@@ -546,7 +546,7 @@ window.Webflow.push(() => {
         filter: 'grayscale(100%)',
         opacity: 0.6,
         duration: 0.4,
-        ease: 'power2.out'
+        ease: 'power2.out',
       });
     });
   });
@@ -559,7 +559,7 @@ window.Webflow.push(() => {
     ease: 'sine.inOut',
     yoyo: true,
     repeat: -1,
-    transformOrigin: 'center center'
+    transformOrigin: 'center center',
   });
 
   gsap.to('.layer-blur-2', {
@@ -569,7 +569,7 @@ window.Webflow.push(() => {
     ease: 'sine.inOut',
     yoyo: true,
     repeat: -1,
-    transformOrigin: 'center center'
+    transformOrigin: 'center center',
   });
 
   // Testimonial vertical scroll animation
@@ -597,18 +597,18 @@ window.Webflow.push(() => {
       onRepeat: () => {
         // Jump back to start when animation repeats
         gsap.set(testimonialContainer, { y: 0 });
-      }
+      },
     });
   }
 
   // Set initial state for image wrapper
-  gsap.set('.header15_image-wrapper', { 
+  gsap.set('.header15_image-wrapper', {
     opacity: 0,
-    y: 50
+    y: 50,
   });
-  gsap.set('.team4_item', { 
+  gsap.set('.team4_item', {
     opacity: 0,
-    y: 50
+    y: 50,
   });
 
   // Animate image wrapper when it comes into view
@@ -620,7 +620,7 @@ window.Webflow.push(() => {
     scrollTrigger: {
       trigger: '.header15_image-wrapper',
       start: 'top 80%',
-    }
+    },
   });
 
   // Animate team items with stagger when they come into view
@@ -633,7 +633,7 @@ window.Webflow.push(() => {
     scrollTrigger: {
       trigger: '.team4_item',
       start: 'top 80%',
-    }
+    },
   });
 });
 
@@ -652,44 +652,28 @@ function animateWords(): void {
   }
 
   const words: ColoredWord[] = [
-    { text: 'Secure', color: '#0fa4ff' },        // Coral red
-    { text: 'Visa-Ready', color: '#218491' },    // Turquoise
-    { text: 'Comfortably', color: '#36e7cb' },   // Sky blue
-    { text: 'Anywhere', color: '#0fa4ff' },      // Sage green
-    { text: 'Beyond', color: '#218491' }         // Purple
+    { text: 'Secure', color: '#0fa4ff' }, // Coral red
+    { text: 'Visa-Ready', color: '#218491' }, // Turquoise
+    { text: 'Comfortably', color: '#36e7cb' }, // Sky blue
+    { text: 'Anywhere', color: '#0fa4ff' }, // Sage green
+    { text: 'Beyond', color: '#218491' }, // Purple
   ];
-
-  function displayWords() {
-    // First, get your container element (add an id to your HTML element)
-    const containerElement = document.getElementById('words-container');
-    
-    if (containerElement) {
-      words.forEach(word => {
-        const span = document.createElement('span');
-        span.textContent = word.text;
-        span.style.color = word.color;
-        span.style.fontWeight = 'bold';
-        span.style.marginRight = '10px'; // Add some spacing between words
-        containerElement.appendChild(span);
-      });
-    }
-  }
 
   let currentIndex = 0;
   let split: SplitType | null = null;
 
   function updateText(): void {
     if (!textElement) return;
-    
+
     // Set both text and color
     textElement.textContent = words[currentIndex].text;
     textElement.style.color = words[currentIndex].color;
     textElement.style.fontWeight = 'medium';
-    
+
     split = new SplitType(textElement, { types: 'chars' });
     if (split.chars) {
       // Ensure each character inherits the color
-      split.chars.forEach(char => {
+      split.chars.forEach((char) => {
         (char as HTMLElement).style.color = words[currentIndex].color;
       });
       animateChars(split.chars);
@@ -743,7 +727,7 @@ gsap.to('.nav-image-wrapper-2', {
   ease: 'power1.inOut',
   yoyo: true,
   repeat: -1,
-  transformOrigin: 'center center'
+  transformOrigin: 'center center',
 });
 
 // Light beam animation
@@ -753,7 +737,7 @@ gsap.to('.nav-image-wrapper-2::before', {
   ease: 'power1.inOut',
   yoyo: true,
   repeat: -1,
-  transformOrigin: 'center center'
+  transformOrigin: 'center center',
 });
 
 interface CityResult {
@@ -783,7 +767,7 @@ function initializeCityAutocomplete(): void {
 
   const cityInput = document.querySelector<HTMLInputElement>('.city-input');
   const suggestionsDiv = document.querySelector<HTMLDivElement>('.city-suggestions');
-  
+
   if (!cityInput || !suggestionsDiv) return;
 
   let debounceTimer: NodeJS.Timeout;
@@ -791,7 +775,7 @@ function initializeCityAutocomplete(): void {
 
   cityInput.addEventListener('input', async (e) => {
     const target = e.target as HTMLInputElement;
-    const value = target.value;
+    const { value } = target;
 
     clearTimeout(debounceTimer);
 
@@ -806,28 +790,28 @@ function initializeCityAutocomplete(): void {
         const response = await fetch(
           `https://api.openweathermap.org/geo/1.0/direct?q=${value}&limit=5&appid=${OPENWEATHER_API_KEY}`
         );
-        
+
         const data: CityResult[] = await response.json();
-        
+
         suggestionsDiv.innerHTML = '';
-        
+
         if (data.length > 0) {
           suggestionsDiv.style.display = 'block';
-          
+
           data.forEach((city) => {
             const div = document.createElement('div');
             div.className = 'city-suggestion';
             // Include state if available
-            const displayText = city.state 
+            const displayText = city.state
               ? `${city.name}, ${city.state}, ${city.country}`
               : `${city.name}, ${city.country}`;
             div.textContent = displayText;
-            
+
             div.addEventListener('click', () => {
               cityInput.value = displayText;
               suggestionsDiv.style.display = 'none';
             });
-            
+
             suggestionsDiv.appendChild(div);
           });
         } else {
@@ -847,10 +831,5 @@ function initializeCityAutocomplete(): void {
   });
 }
 
-
-
 // Add to your existing DOMContentLoaded listener
 document.addEventListener('DOMContentLoaded', initializeCityAutocomplete);
-
-
-

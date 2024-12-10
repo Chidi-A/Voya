@@ -41,6 +41,7 @@
     "@finsweet/eslint-config": "^3.0.1",
     "@finsweet/tsconfig": "^1.4.0",
     "@playwright/test": "^1.48.2",
+    "@types/eslint": "^9.6.1",
     "@types/node": "^22.10.1",
     "cross-env": "^7.0.3",
     "esbuild": "^0.24.0",
