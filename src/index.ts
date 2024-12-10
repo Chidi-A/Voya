@@ -1,8 +1,32 @@
+import Lenis from '@studio-freight/lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SplitType from 'split-type';
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Initialize Lenis
+const lenis = new Lenis({
+  duration: 1.2,
+  easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // https://www.desmos.com/calculator/brs54l4xou
+  orientation: 'vertical', // vertical, horizontal
+  gestureOrientation: 'vertical', // vertical, horizontal, both
+  smoothWheel: true,
+});
+
+// Get time for animation
+function raf(time: number) {
+  lenis.raf(time);
+  requestAnimationFrame(raf);
+}
+
+// Integrate GSAP ScrollTrigger with Lenis
+gsap.ticker.add((time) => {
+  lenis.raf(time * 1000);
+});
+
+// Start the animation
+requestAnimationFrame(raf);
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
@@ -93,12 +117,16 @@ window.Webflow.push(() => {
   });
 
   // Split texts for scroll animations
-  const moveText = new SplitType('.move-text'); // Update this selector to match your heading
+  const moveText = new SplitType('.move-text');
   const moveParagraph = new SplitType('.move-paragraph');
+  const aboutParagraph = new SplitType('.about-paragraph');
+  const teamParagraph = new SplitType('.team-paragraph');
 
   // Create scroll-triggered animations for move section
   gsap.set(moveText.lines || [], { opacity: 0, yPercent: 100 });
   gsap.set(moveParagraph.lines || [], { opacity: 0, xPercent: 20 });
+  gsap.set(aboutParagraph.lines || [], { opacity: 0, xPercent: 20 });
+  gsap.set(teamParagraph.lines || [], { opacity: 0, xPercent: 20 });
 
   // Animate move text from bottom
   gsap.to(moveText.lines || [], {
@@ -126,6 +154,32 @@ window.Webflow.push(() => {
     },
   });
 
+  // Animate about paragraph lines from right
+  gsap.to(aboutParagraph.lines || [], {
+    opacity: 1,
+    xPercent: 0,
+    duration: 1,
+    stagger: 0.2,
+    ease: 'power3.out',
+    scrollTrigger: {
+      trigger: '.about-paragraph',
+      start: 'top+=20% 60%',
+    },
+  });
+
+  // Animate team paragraph lines from right
+  gsap.to(teamParagraph.lines || [], {
+    opacity: 1,
+    xPercent: 0,
+    duration: 1,
+    stagger: 0.2,
+    ease: 'power3.out',
+    scrollTrigger: {
+      trigger: '.team-paragraph',
+      start: 'top+=20% 60%',
+    },
+  });
+
   // Animate location cards from right
   gsap.set('.home-locations_column', { opacity: 0, xPercent: 100 });
 
@@ -141,54 +195,66 @@ window.Webflow.push(() => {
     },
   });
 
-  // Mouse follow animation for blur layer
-  const blurLayer = document.querySelector('.layer-blur');
-  const section = document.querySelector('.section_home-locations');
-
-  if (section && blurLayer) {
-    section.addEventListener('mousemove', (e: Event) => {
-      const mouseEvent = e as MouseEvent;
-      const rect = section.getBoundingClientRect();
-      const x = mouseEvent.clientX - rect.left - blurLayer.clientWidth / 2;
-      const y = mouseEvent.clientY - blurLayer.clientHeight / 2;
-
-      gsap.to('.layer-blur', {
-        x: x,
-        y: y,
-        scale: 1.2, // Scale up on movement
-        opacity: 0.8, // Fade slightly
-        duration: 0.8,
-        ease: 'power2.out',
-        transformOrigin: 'center center',
-        onComplete: () => {
-          // Scale and fade back to normal
-          gsap.to('.layer-blur', {
-            scale: 1,
-            opacity: 0.5,
-            duration: 0.4,
-            ease: 'power2.out',
-          });
-        },
-      });
-    });
-  }
-
   // Mouse hover animation for location columns
   const locationColumns = document.querySelectorAll('.home-locations_column');
 
   if (locationColumns) {
+    // Add the CSS styles programmatically
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+      .gleam-effect {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .gleam-effect::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transform: translateX(var(--gleam-position, -100%));
+        pointer-events: none;
+      }
+    `;
+    document.head.appendChild(styleSheet);
+
     locationColumns.forEach((column) => {
+      // Add the gleam class to enable the shine effect
+      column.classList.add('gleam-effect');
+
       column.addEventListener('mouseenter', () => {
+        // Original scale animation
         gsap.to(column, {
-          scale: 1.05, // Scale up slightly
+          scale: 1.05,
           duration: 0.4,
           ease: 'power2.out',
         });
+
+        // Animate the gleam effect
+        gsap.fromTo(
+          column,
+          {
+            '--gleam-position': '-100%',
+          },
+          {
+            '--gleam-position': '200%',
+            duration: 1,
+            ease: 'power2.inOut',
+          }
+        );
       });
 
       column.addEventListener('mouseleave', () => {
         gsap.to(column, {
-          scale: 1, // Return to original size
+          scale: 1,
           duration: 0.4,
           ease: 'power2.out',
         });
@@ -247,20 +313,36 @@ window.Webflow.push(() => {
   const featureColumns = document.querySelectorAll('.features-locations_column');
 
   if (featureColumns) {
+    // Add the CSS styles programmatically
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+      .features-locations_column {
+        transition: background-color 0.6s ease;
+      }
+      .features-locations_column * {
+        transition: color 0.6s ease;
+      }
+    `;
+    document.head.appendChild(styleSheet);
+
     featureColumns.forEach((column) => {
       const mockup = column.querySelector('.features_mockup');
+      const textElements = column.querySelectorAll(
+        '.feature-column-heading, .feature-column-paragraph'
+      );
 
-      // Set initial state
+      // Set initial state - mockup slightly visible
       if (mockup) {
         gsap.set(mockup, {
-          scale: 0.8,
-          opacity: 0,
-          xPercent: 20,
-          yPercent: 20,
+          scale: 0.9,
+          opacity: 0.2,
+          xPercent: 10,
+          yPercent: 10,
         });
       }
 
       column.addEventListener('mouseenter', () => {
+        // Animate mockup
         if (mockup) {
           gsap.to(mockup, {
             scale: 1,
@@ -271,19 +353,50 @@ window.Webflow.push(() => {
             ease: 'power3.out',
           });
         }
+
+        // Change background and text colors
+        gsap.to(column, {
+          backgroundColor: '#DDF1FF',
+          duration: 0.6,
+          ease: 'power3.out',
+        });
+
+        textElements.forEach((element) => {
+          gsap.to(element, {
+            color: '#000000',
+            duration: 0.6,
+            ease: 'power3.out',
+          });
+        });
       });
 
       column.addEventListener('mouseleave', () => {
+        // Animate mockup back
         if (mockup) {
           gsap.to(mockup, {
-            scale: 0.8,
-            opacity: 0,
-            xPercent: 20,
-            yPercent: 20,
+            scale: 0.9,
+            opacity: 0.2,
+            xPercent: 10,
+            yPercent: 10,
             duration: 0.6,
             ease: 'power3.in',
           });
         }
+
+        // Revert background and text colors
+        gsap.to(column, {
+          backgroundColor: 'transparent',
+          duration: 0.6,
+          ease: 'power3.in',
+        });
+
+        textElements.forEach((element) => {
+          gsap.to(element, {
+            color: '#ffffff',
+            duration: 0.6,
+            ease: 'power3.in',
+          });
+        });
       });
     });
   }
@@ -387,16 +500,140 @@ window.Webflow.push(() => {
     },
   });
 
-  // Subtle pulsing motion for layer-blur-2
-  gsap.to('.layer-blur-2', {
-    scale: 1.1,
-    opacity: 0.8,
+  // Subtle pulsing motion for CTA mockups
+  gsap.to('.cta-mockup-wrapper', {
+    scale: 1.05,
     duration: 2,
     ease: 'sine.inOut',
     yoyo: true,
     repeat: -1,
     repeatDelay: 0.3,
     transformOrigin: 'center center',
+  });
+
+  // Add grayscale effect for logos
+  const logos = document.querySelectorAll('.logo3_logo');
+
+  // Add the CSS styles programmatically
+  const logoStyleSheet = document.createElement('style');
+  logoStyleSheet.textContent = `
+    .logo3_logo {
+      filter: grayscale(100%);
+      opacity: 0.6;
+      transition: all 0.4s ease;
+    }
+    
+    .logo3_logo:hover {
+      filter: grayscale(0%);
+      opacity: 1;
+    }
+  `;
+  document.head.appendChild(logoStyleSheet);
+
+  // Optional: Add JavaScript hover effect if you want more control
+  logos.forEach((logo) => {
+    logo.addEventListener('mouseenter', () => {
+      gsap.to(logo, {
+        filter: 'grayscale(0%)',
+        opacity: 1,
+        duration: 0.4,
+        ease: 'power2.out',
+      });
+    });
+
+    logo.addEventListener('mouseleave', () => {
+      gsap.to(logo, {
+        filter: 'grayscale(100%)',
+        opacity: 0.6,
+        duration: 0.4,
+        ease: 'power2.out',
+      });
+    });
+  });
+
+  // Subtle floating animation for blur layers
+  gsap.to('.layer-blur', {
+    x: 40,
+    y: 40,
+    duration: 4,
+    ease: 'sine.inOut',
+    yoyo: true,
+    repeat: -1,
+    transformOrigin: 'center center',
+  });
+
+  gsap.to('.layer-blur-2', {
+    x: -40,
+    y: -30,
+    duration: 3.5,
+    ease: 'sine.inOut',
+    yoyo: true,
+    repeat: -1,
+    transformOrigin: 'center center',
+  });
+
+  // Testimonial vertical scroll animation
+  const testimonialContainer = document.querySelector('.testimonial-container');
+  const testimonialWrapper = document.querySelector('.testimonial-collection_wrapper');
+
+  if (testimonialContainer && testimonialWrapper) {
+    // Get the distance that needs to be scrolled
+    // This is the difference between container height and wrapper height
+    const containerHeight = (testimonialContainer as HTMLElement).offsetHeight;
+    const wrapperHeight = (testimonialWrapper as HTMLElement).offsetHeight;
+    const scrollDistance = containerHeight - wrapperHeight;
+
+    // Create the scrolling animation
+    gsap.to(testimonialContainer, {
+      y: -scrollDistance, // Negative value for upward motion
+      duration: 45, // Adjust duration as needed
+      ease: 'none',
+      repeat: -1,
+      scrollTrigger: {
+        trigger: testimonialWrapper,
+        start: 'top center',
+        end: 'bottom center',
+      },
+      onRepeat: () => {
+        // Jump back to start when animation repeats
+        gsap.set(testimonialContainer, { y: 0 });
+      },
+    });
+  }
+
+  // Set initial state for image wrapper
+  gsap.set('.header15_image-wrapper', {
+    opacity: 0,
+    y: 50,
+  });
+  gsap.set('.team4_item', {
+    opacity: 0,
+    y: 50,
+  });
+
+  // Animate image wrapper when it comes into view
+  gsap.to('.header15_image-wrapper', {
+    opacity: 1,
+    y: 0,
+    duration: 1,
+    ease: 'power3.out',
+    scrollTrigger: {
+      trigger: '.header15_image-wrapper',
+      start: 'top 80%',
+    },
+  });
+
+  // Animate team items with stagger when they come into view
+  gsap.to('.team4_item', {
+    opacity: 1,
+    y: 0,
+    duration: 1,
+    stagger: 0.2,
+    ease: 'power3.out',
+    scrollTrigger: {
+      trigger: '.team4_item',
+      start: 'top 80%',
+    },
   });
 });
 
@@ -408,15 +645,37 @@ function animateWords(): void {
     return;
   }
 
-  const words: string[] = ['secure', 'visa-ready', 'comfortably', 'anywhere', 'beyond'];
+  // Define the words with their colors using an interface
+  interface ColoredWord {
+    text: string;
+    color: string;
+  }
+
+  const words: ColoredWord[] = [
+    { text: 'Secure', color: '#0fa4ff' }, // Coral red
+    { text: 'Visa-Ready', color: '#218491' }, // Turquoise
+    { text: 'Comfortably', color: '#36e7cb' }, // Sky blue
+    { text: 'Anywhere', color: '#0fa4ff' }, // Sage green
+    { text: 'Beyond', color: '#218491' }, // Purple
+  ];
+
   let currentIndex = 0;
   let split: SplitType | null = null;
 
   function updateText(): void {
     if (!textElement) return;
-    textElement.textContent = words[currentIndex];
+
+    // Set both text and color
+    textElement.textContent = words[currentIndex].text;
+    textElement.style.color = words[currentIndex].color;
+    textElement.style.fontWeight = 'medium';
+
     split = new SplitType(textElement, { types: 'chars' });
     if (split.chars) {
+      // Ensure each character inherits the color
+      split.chars.forEach((char) => {
+        (char as HTMLElement).style.color = words[currentIndex].color;
+      });
       animateChars(split.chars);
     }
     currentIndex = (currentIndex + 1) % words.length;
@@ -438,3 +697,139 @@ function animateWords(): void {
 
   setInterval(updateText, 3000);
 }
+
+// Add CSS for light beam effect
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  .nav-image-wrapper-2 {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .nav-image-wrapper-2::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+    pointer-events: none;
+    opacity: 0;
+  }
+`;
+document.head.appendChild(styleSheet);
+
+// Pulse animation with light beam effect
+gsap.to('.nav-image-wrapper-2', {
+  scale: 1.2,
+  duration: 0.8,
+  ease: 'power1.inOut',
+  yoyo: true,
+  repeat: -1,
+  transformOrigin: 'center center',
+});
+
+// Light beam animation
+gsap.to('.nav-image-wrapper-2::before', {
+  opacity: 0.5,
+  duration: 0.8,
+  ease: 'power1.inOut',
+  yoyo: true,
+  repeat: -1,
+  transformOrigin: 'center center',
+});
+
+interface CityResult {
+  name: string;
+  state?: string;
+  country: string;
+  lat: number;
+  lon: number;
+}
+
+function initializeCityAutocomplete(): void {
+  // Add CSS styles programmatically
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = `
+    .city-suggestion {
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .city-suggestion:hover {
+      background-color: #f5f5f5;
+      transform: translateX(4px);
+      color: #000000;
+    }
+  `;
+  document.head.appendChild(styleSheet);
+
+  const cityInput = document.querySelector<HTMLInputElement>('.city-input');
+  const suggestionsDiv = document.querySelector<HTMLDivElement>('.city-suggestions');
+
+  if (!cityInput || !suggestionsDiv) return;
+
+  let debounceTimer: NodeJS.Timeout;
+  const OPENWEATHER_API_KEY = '91c9225f1177a02fcfd2aedc5b7786c0';
+
+  cityInput.addEventListener('input', async (e) => {
+    const target = e.target as HTMLInputElement;
+    const { value } = target;
+
+    clearTimeout(debounceTimer);
+
+    if (!value) {
+      suggestionsDiv.innerHTML = '';
+      suggestionsDiv.style.display = 'none';
+      return;
+    }
+
+    debounceTimer = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `https://api.openweathermap.org/geo/1.0/direct?q=${value}&limit=5&appid=${OPENWEATHER_API_KEY}`
+        );
+
+        const data: CityResult[] = await response.json();
+
+        suggestionsDiv.innerHTML = '';
+
+        if (data.length > 0) {
+          suggestionsDiv.style.display = 'block';
+
+          data.forEach((city) => {
+            const div = document.createElement('div');
+            div.className = 'city-suggestion';
+            // Include state if available
+            const displayText = city.state
+              ? `${city.name}, ${city.state}, ${city.country}`
+              : `${city.name}, ${city.country}`;
+            div.textContent = displayText;
+
+            div.addEventListener('click', () => {
+              cityInput.value = displayText;
+              suggestionsDiv.style.display = 'none';
+            });
+
+            suggestionsDiv.appendChild(div);
+          });
+        } else {
+          suggestionsDiv.style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Error fetching cities:', error);
+      }
+    }, 300);
+  });
+
+  // Close suggestions when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!cityInput.contains(e.target as Node)) {
+      suggestionsDiv.style.display = 'none';
+    }
+  });
+}
+
+// Add to your existing DOMContentLoaded listener
+document.addEventListener('DOMContentLoaded', initializeCityAutocomplete);

@@ -1,3 +1,4 @@
-import finsweetConfigs from '@voya/eslint-config';
+import finsweetConfigs from '@finsweet/eslint-config';
 
 export default [...finsweetConfigs];
+
