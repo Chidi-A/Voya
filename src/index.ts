@@ -1,7 +1,20 @@
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+
 import Lenis from '@studio-freight/lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SplitType from 'split-type';
+import Swiper from 'swiper';
+import { Autoplay, Keyboard, Mousewheel, Navigation, Pagination } from 'swiper/modules';
+
+const isMobile = () => window.innerWidth < 768;
+
+ScrollTrigger.config({
+  limitCallbacks: true,
+  ignoreMobileResize: true,
+});
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -30,611 +43,577 @@ requestAnimationFrame(raf);
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
-  animateWords();
-  // Initialize split text elements
-  const headingText = new SplitType('h1');
-  const paragraphText = new SplitType('.hero-paragraph');
-  const tl = gsap.timeline();
+  if (isMobile()) {
+    // Completely disable ScrollTrigger for certain animations on mobile
+    ScrollTrigger.getAll().forEach((trigger) => {
+      const triggerElement = trigger.vars.trigger;
+      if (
+        typeof triggerElement === 'string' &&
+        (triggerElement.includes('features') || triggerElement.includes('locations'))
+      ) {
+        trigger.kill();
+      }
+    });
 
-  // Set initial states for all elements
-  gsap.set('.navbar6_component', { opacity: 0 });
-  gsap.set('.home-header_image-wrapper', { opacity: 0, scale: 1.02 });
-  gsap.set('.home-header_form-container', { opacity: 0, yPercent: 20 });
-  if (headingText.lines) gsap.set(headingText.lines, { yPercent: 100, opacity: 0 });
-  if (paragraphText.lines) gsap.set(paragraphText.lines, { yPercent: 100, opacity: 0 });
-
-  // Set initial scale for parallax
-  gsap.set('.hero-image', {
-    scale: 1.2, // Increased scale for more room to move
-  });
-
-  // Build animation timeline
-  tl
-    // 1. Fade in navigation and hero image simultaneously
-    .to('.navbar6_component', {
-      opacity: 1,
-      duration: 1.5,
-      ease: 'power2.out',
-    })
-    .to(
-      '.home-header_image-wrapper',
-      {
-        opacity: 1,
-        scale: 1,
-        duration: 1.2,
-        ease: 'power2.out',
-      },
-      '<'
-    )
-    // Add label for text animations
-    .addLabel('textAnimations', '<+=0.2')
-    // 2. Animate heading text
-    .to(
-      headingText.lines || [],
-      {
-        yPercent: 0,
-        opacity: 1,
-        duration: 1,
-        stagger: 0.2,
-        ease: 'power3.out',
-      },
-      'textAnimations'
-    )
-    // 3. Animate paragraph text
-    .to(
-      paragraphText.lines || [],
-      {
-        yPercent: 0,
-        opacity: 1,
-        duration: 1,
-        stagger: 0.2,
-        ease: 'power3.out',
-      },
-      'textAnimations+=0.5'
-    )
-    // Add form container animation
-    .to(
-      '.home-header_form-container',
-      {
-        opacity: 1,
-        yPercent: 0,
-        duration: 1,
-        ease: 'power3.out',
-      },
-      'textAnimations+=0.8'
+    // Simpler animations for features section on mobile
+    const featuresElements = document.querySelectorAll(
+      '.features-svg, .features-heading, .home-features_bottom-grid'
     );
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '50px',
+    };
 
-  // Separate parallax scroll effect
-  gsap.to('.hero-image', {
-    yPercent: -120, // Increased movement range
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '.home-header_section',
-      start: 'top top',
-      end: 'bottom center', // Adjusted end point for more pronounced effect
-      scrub: 0.5, // Reduced scrub for more immediate response
-    },
-  });
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          gsap.to(entry.target, {
+            opacity: 1,
+            y: 0,
+            duration: 0.3,
+            clearProps: 'transform', // Clear transform after animation
+          });
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
 
-  // Split texts for scroll animations
-  const moveText = new SplitType('.move-text');
-  const moveParagraph = new SplitType('.move-paragraph');
-  const aboutParagraph = new SplitType('.about-paragraph');
-  const teamParagraph = new SplitType('.team-paragraph');
+    featuresElements.forEach((el) => {
+      gsap.set(el, { opacity: 0, y: 20 });
+      observer.observe(el);
+    });
 
-  // Create scroll-triggered animations for move section
-  gsap.set(moveText.lines || [], { opacity: 0, yPercent: 100 });
-  gsap.set(moveParagraph.lines || [], { opacity: 0, xPercent: 20 });
-  gsap.set(aboutParagraph.lines || [], { opacity: 0, xPercent: 20 });
-  gsap.set(teamParagraph.lines || [], { opacity: 0, xPercent: 20 });
-
-  // Animate move text from bottom
-  gsap.to(moveText.lines || [], {
-    opacity: 1,
-    yPercent: 0,
-    duration: 1,
-    stagger: 0.2,
-    ease: 'power3.out',
-    scrollTrigger: {
-      trigger: '.section_home-locations',
-      start: 'top+=20% 70%',
-    },
-  });
-
-  // Animate paragraph lines from right
-  gsap.to(moveParagraph.lines || [], {
-    opacity: 1,
-    xPercent: 0,
-    duration: 1,
-    stagger: 0.2,
-    ease: 'power3.out',
-    scrollTrigger: {
-      trigger: '.section_home-locations',
-      start: 'top+=20% 60%', // Slightly after the heading
-    },
-  });
-
-  // Animate about paragraph lines from right
-  gsap.to(aboutParagraph.lines || [], {
-    opacity: 1,
-    xPercent: 0,
-    duration: 1,
-    stagger: 0.2,
-    ease: 'power3.out',
-    scrollTrigger: {
-      trigger: '.about-paragraph',
-      start: 'top+=20% 60%',
-    },
-  });
-
-  // Animate team paragraph lines from right
-  gsap.to(teamParagraph.lines || [], {
-    opacity: 1,
-    xPercent: 0,
-    duration: 1,
-    stagger: 0.2,
-    ease: 'power3.out',
-    scrollTrigger: {
-      trigger: '.team-paragraph',
-      start: 'top+=20% 60%',
-    },
-  });
-
-  // Animate location cards from right
-  gsap.set('.home-locations_column', { opacity: 0, xPercent: 100 });
-
-  gsap.to('.home-locations_column', {
-    opacity: 1,
-    xPercent: 0,
-    duration: 1.2,
-    stagger: 0.2,
-    ease: 'back.out(1.3)',
-    scrollTrigger: {
-      trigger: '.section_home-locations',
-      start: 'top+=30% 60%',
-    },
-  });
-
-  // Mouse hover animation for location columns
-  const locationColumns = document.querySelectorAll('.home-locations_column');
-
-  if (locationColumns) {
-    // Add the CSS styles programmatically
-    const styleSheet = document.createElement('style');
-    styleSheet.textContent = `
-      .gleam-effect {
-        position: relative;
-        overflow: hidden;
-      }
-
-      .gleam-effect::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.2),
-          transparent
-        );
-        transform: translateX(var(--gleam-position, -100%));
-        pointer-events: none;
-      }
-    `;
-    document.head.appendChild(styleSheet);
+    // Simpler animations for locations section on mobile
+    const locationColumns = document.querySelectorAll('.home-locations_column');
+    const locationObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          gsap.to(entry.target, {
+            opacity: 1,
+            x: 0,
+            duration: 0.3,
+            clearProps: 'transform',
+          });
+          locationObserver.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
 
     locationColumns.forEach((column) => {
-      // Add the gleam class to enable the shine effect
-      column.classList.add('gleam-effect');
+      gsap.set(column, { opacity: 0, x: 20 });
+      locationObserver.observe(column);
+    });
 
-      column.addEventListener('mouseenter', () => {
-        // Original scale animation
-        gsap.to(column, {
-          scale: 1.05,
+    // Disable unnecessary effects on mobile
+    gsap.killTweensOf('.layer-blur, .layer-blur-2');
+    gsap.killTweensOf('.cta-mockup-wrapper');
+
+    // Add touch-specific optimizations
+    const touchOptimizations = document.createElement('style');
+    touchOptimizations.textContent = `
+      @media (max-width: 767px) {
+        .features-svg,
+        .home-features_bottom-grid,
+        .home-locations_column {
+          -webkit-transform: translateZ(0);
+          transform: translateZ(0);
+          backface-visibility: hidden;
+          perspective: 1000px;
+        }
+        
+        .section_home-features,
+        .section_home-locations {
+          transform: translate3d(0,0,0);
+          -webkit-transform: translate3d(0,0,0);
+          -webkit-backface-visibility: hidden;
+          -webkit-perspective: 1000;
+        }
+      }
+    `;
+    document.head.appendChild(touchOptimizations);
+  } else {
+    animateWords();
+    // Initialize split text elements
+    const headingText = !isMobile() ? new SplitType('h1') : null;
+    const paragraphText = !isMobile() ? new SplitType('.hero-paragraph') : null;
+    const tl = gsap.timeline();
+
+    // Set initial states for all elements
+    gsap.set('.navbar6_component', { opacity: 0 });
+    gsap.set('.home-header_image-wrapper', { opacity: 0, scale: 1.02 });
+    gsap.set('.home-header_form-container', { opacity: 0, yPercent: 20 });
+    if (headingText?.lines) gsap.set(headingText.lines, { yPercent: 100, opacity: 0 });
+    if (paragraphText?.lines) gsap.set(paragraphText.lines, { yPercent: 100, opacity: 0 });
+
+    // Set initial scale for parallax
+    gsap.set('.hero-image', {
+      scale: 1.2, // Increased scale for more room to move
+    });
+
+    // Build animation timeline
+    tl
+      // 1. Fade in navigation and hero image simultaneously
+      .to('.navbar6_component', {
+        opacity: 1,
+        duration: 1.5,
+        ease: 'power2.out',
+      })
+      .to(
+        '.home-header_image-wrapper',
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 1.2,
+          ease: 'power2.out',
+        },
+        '<'
+      )
+      // Add label for text animations
+      .addLabel('textAnimations', '<+=0.2')
+      // 2. Animate heading text
+      .to(
+        headingText?.lines || [],
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          stagger: 0.2,
+          ease: 'power3.out',
+        },
+        'textAnimations'
+      )
+      // 3. Animate paragraph text
+      .to(
+        paragraphText?.lines || [],
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1,
+          stagger: 0.2,
+          ease: 'power3.out',
+        },
+        'textAnimations+=0.5'
+      )
+      // Add form container animation
+      .to(
+        '.home-header_form-container',
+        {
+          opacity: 1,
+          yPercent: 0,
+          duration: 1,
+          ease: 'power3.out',
+        },
+        'textAnimations+=0.8'
+      );
+
+    // Separate parallax scroll effect
+    gsap.to('.hero-image', {
+      yPercent: -120,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.home-header_section',
+        start: 'top top',
+        end: 'bottom center',
+        scrub: 0.5,
+      },
+    });
+
+    // Split texts for scroll animations
+
+    const aboutParagraph = new SplitType('.about-paragraph');
+    const teamParagraph = new SplitType('.team-paragraph');
+
+    // Create scroll-triggered animations for move section
+
+    gsap.set(aboutParagraph.lines || [], { opacity: 0, xPercent: 20 });
+    gsap.set(teamParagraph.lines || [], { opacity: 0, xPercent: 20 });
+
+    // Animate about paragraph lines from right
+    gsap.to(aboutParagraph.lines || [], {
+      opacity: 1,
+      xPercent: 0,
+      duration: 1,
+      stagger: 0.2,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.about-paragraph',
+        start: 'top+=20% 60%',
+      },
+    });
+
+    // Animate team paragraph lines from right
+    gsap.to(teamParagraph.lines || [], {
+      opacity: 1,
+      xPercent: 0,
+      duration: 1,
+      stagger: 0.2,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.team-paragraph',
+        start: 'top+=20% 60%',
+      },
+    });
+
+    // Mouse hover animation for location columns
+    // const locationColumns = document.querySelectorAll('.home-locations_column');
+
+    // if (locationColumns) {
+    //   locationColumns.forEach((column) => {
+    //     column.addEventListener('mouseenter', () => {
+    //       gsap.to(column, {
+    //         scale: 1.05,
+    //         duration: 0.4,
+    //         ease: 'power2.out'
+    //       });
+    //     });
+
+    //     column.addEventListener('mouseleave', () => {
+    //       gsap.to(column, {
+    //         scale: 1,
+    //         duration: 0.4,
+    //         ease: 'power2.out'
+    //       });
+    //     });
+    //   });
+    // }
+
+    // Set initial states
+    gsap.set('.sticky-heading-2', { yPercent: 0 });
+    gsap.set('.border-line_active', { width: 0 });
+
+    // First item animations
+    gsap.to('.sticky-heading-2', {
+      yPercent: 0,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.home-why_item:nth-child(1)',
+        start: 'top center',
+        end: 'bottom+=100% center',
+        scrub: true,
+      },
+    });
+
+    gsap.to('.home-why_item:nth-child(1) .border-line_active', {
+      width: '100%',
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.home-why_item:nth-child(1)',
+        start: 'top center',
+        end: 'bottom+=100% center',
+        scrub: true,
+      },
+    });
+
+    // Second item animations
+    gsap.to('.sticky-heading-2', {
+      yPercent: 0,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.home-why_item:nth-child(2)',
+        start: 'top+=0% center',
+        end: 'bottom+=100% center',
+        scrub: true,
+      },
+    });
+
+    gsap.to('.home-why_item:nth-child(2) .border-line_active', {
+      width: '100%',
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.home-why_item:nth-child(2)',
+        start: 'top+=100% center',
+        end: 'bottom+=200% center',
+        scrub: true,
+      },
+    });
+
+    // Third item animations
+    gsap.to('.sticky-heading-2', {
+      yPercent: -66.6,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.home-why_item:nth-child(3)',
+        start: 'top center',
+        end: 'bottom+=100% center',
+        scrub: true,
+      },
+    });
+
+    gsap.to('.home-why_item:nth-child(3) .border-line_active', {
+      width: '100%',
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.home-why_item:nth-child(3)',
+        start: 'top+=120% center',
+        end: 'bottom+=200% center',
+        scrub: true,
+      },
+    });
+
+    // CTA section animations
+    gsap.set('.cta-mockup-wrapper.is-1', { yPercent: 100, opacity: 0 }); // Start below
+    gsap.set('.cta-mockup-wrapper:not(.is-1)', { yPercent: -100, opacity: 0 }); // Start above
+
+    gsap.to('.cta-mockup-wrapper.is-1', {
+      yPercent: 0,
+      opacity: 1,
+      duration: 1,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.section_cta',
+        start: 'top 70%',
+      },
+    });
+
+    gsap.to('.cta-mockup-wrapper:not(.is-1)', {
+      yPercent: 0,
+      opacity: 1,
+      duration: 1,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.section_cta',
+        start: 'top 70%',
+      },
+    });
+
+    // Subtle pulsing motion for CTA mockups
+    gsap.to('.cta-mockup-wrapper', {
+      scale: 1.05,
+      duration: 2,
+      ease: 'sine.inOut',
+      yoyo: true,
+      repeat: -1,
+      repeatDelay: 0.3,
+      transformOrigin: 'center center',
+    });
+
+    // Add grayscale effect for logos
+    const logos = document.querySelectorAll('.logo3_logo');
+
+    // Add the CSS styles programmatically
+    const logoStyleSheet = document.createElement('style');
+    logoStyleSheet.textContent = `
+      .logo3_logo {
+        filter: grayscale(100%);
+        opacity: 0.6;
+        transition: all 0.4s ease;
+      }
+      
+      .logo3_logo:hover {
+        filter: grayscale(0%);
+        opacity: 1;
+      }
+    `;
+    document.head.appendChild(logoStyleSheet);
+
+    // Optional: Add JavaScript hover effect if you want more control
+    logos.forEach((logo) => {
+      logo.addEventListener('mouseenter', () => {
+        gsap.to(logo, {
+          filter: 'grayscale(0%)',
+          opacity: 1,
           duration: 0.4,
           ease: 'power2.out',
         });
-
-        // Animate the gleam effect
-        gsap.fromTo(
-          column,
-          {
-            '--gleam-position': '-100%',
-          },
-          {
-            '--gleam-position': '200%',
-            duration: 1,
-            ease: 'power2.inOut',
-          }
-        );
       });
 
-      column.addEventListener('mouseleave', () => {
-        gsap.to(column, {
-          scale: 1,
+      logo.addEventListener('mouseleave', () => {
+        gsap.to(logo, {
+          filter: 'grayscale(100%)',
+          opacity: 0.6,
           duration: 0.4,
           ease: 'power2.out',
         });
       });
     });
-  }
 
-  // Split text for features heading
-  const featuresHeading = new SplitType('.features-heading');
+    // Subtle floating animation for blur layers
+    gsap.to('.layer-blur', {
+      x: 100,
+      y: 100,
+      duration: 4,
+      ease: 'sine.inOut',
+      yoyo: true,
+      repeat: -1,
+      transformOrigin: 'center center',
+    });
 
-  // Set initial states
-  gsap.set('.features-svg', { opacity: 0, y: 50 });
-  gsap.set(featuresHeading.lines || [], { opacity: 0, y: 50 });
-  gsap.set('.home-features_bottom-grid', { opacity: 0, y: 30 });
+    gsap.to('.layer-blur-2', {
+      x: -100,
+      y: -100,
+      duration: 3.5,
+      ease: 'sine.inOut',
+      yoyo: true,
+      repeat: -1,
+      transformOrigin: 'center center',
+    });
 
-  // Create timeline for features section
-  gsap
-    .timeline({
-      scrollTrigger: {
-        trigger: '.section_home-features',
-        start: 'top 70%',
-      },
-    })
-    // 1. Animate SVG
-    .to('.features-svg', {
+    // Testimonial vertical scroll animation
+    const testimonialContainer = document.querySelector('.testimonial-container');
+    const testimonialWrapper = document.querySelector('.testimonial-collection_wrapper');
+
+    if (testimonialContainer && testimonialWrapper) {
+      // Get the distance that needs to be scrolled
+      // This is the difference between container height and wrapper height
+      const containerHeight = (testimonialContainer as HTMLElement).offsetHeight;
+      const wrapperHeight = (testimonialWrapper as HTMLElement).offsetHeight;
+      const scrollDistance = containerHeight - wrapperHeight;
+
+      // Create the scrolling animation
+      gsap.to(testimonialContainer, {
+        y: -scrollDistance, // Negative value for upward motion
+        duration: 45, // Adjust duration as needed
+        ease: 'none',
+        repeat: -1,
+        scrollTrigger: {
+          trigger: testimonialWrapper,
+          start: 'top center',
+          end: 'bottom center',
+        },
+        onRepeat: () => {
+          // Jump back to start when animation repeats
+          gsap.set(testimonialContainer, { y: 0 });
+        },
+      });
+    }
+
+    // Set initial state for image wrapper
+    gsap.set('.header15_image-wrapper', {
+      opacity: 0,
+      y: 50,
+    });
+    gsap.set('.team4_item', {
+      opacity: 0,
+      y: 50,
+    });
+
+    // Animate image wrapper when it comes into view
+    gsap.to('.header15_image-wrapper', {
       opacity: 1,
       y: 0,
       duration: 1,
       ease: 'power3.out',
-    })
-    // 2. Animate heading lines
-    .to(
-      featuresHeading.lines || [],
-      {
-        opacity: 1,
-        y: 0,
-        duration: 1,
-        stagger: 0.2,
-        ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.header15_image-wrapper',
+        start: 'top 80%',
       },
-      '-=0.5'
-    ) // Start slightly before SVG animation completes
-    // 3. Animate bottom grid
-    .to(
-      '.home-features_bottom-grid',
-      {
-        opacity: 1,
-        y: 0,
-        duration: 1,
-        ease: 'power3.out',
+    });
+
+    // Animate team items with stagger when they come into view
+    gsap.to('.team4_item', {
+      opacity: 1,
+      y: 0,
+      duration: 1,
+      stagger: 0.2,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.team4_item',
+        start: 'top 80%',
       },
-      '-=0.5'
-    ); // Start slightly before heading animation completes
+    });
 
-  // Features column hover animations
-  const featureColumns = document.querySelectorAll('.features-locations_column');
-
-  if (featureColumns) {
-    // Add the CSS styles programmatically
-    const styleSheet = document.createElement('style');
-    styleSheet.textContent = `
-      .features-locations_column {
-        transition: background-color 0.6s ease;
-      }
-      .features-locations_column * {
-        transition: color 0.6s ease;
+    // Add performance optimization styles
+    const performanceStyles = document.createElement('style');
+    performanceStyles.textContent = `
+      .hero-image,
+      .home-locations_column,
+      .features-svg,
+      .home-features_bottom-grid {
+        will-change: transform;
       }
     `;
-    document.head.appendChild(styleSheet);
+    document.head.appendChild(performanceStyles);
 
-    featureColumns.forEach((column) => {
-      const mockup = column.querySelector('.features_mockup');
-      const textElements = column.querySelectorAll(
-        '.feature-column-heading, .feature-column-paragraph'
+    // Initialize Swiper
+    const sliderComponents = document.querySelectorAll<HTMLElement>('.slider-main_component');
+
+    sliderComponents.forEach((component) => {
+      const loopMode = component.getAttribute('loop-mode') === 'true';
+      // Remove or use sliderDuration
+      // const sliderDuration = component.getAttribute('slider-duration')
+      //   ? parseInt(component.getAttribute('slider-duration')!)
+      //   : 300;
+
+      const swiperElement = component.querySelector<HTMLElement>('.swiper');
+      if (!swiperElement) return;
+
+      const swiper = new Swiper(swiperElement, {
+        modules: [Autoplay, Pagination, Navigation, Mousewheel, Keyboard],
+        loop: loopMode,
+        autoHeight: false,
+        centeredSlides: loopMode,
+        followFinger: true,
+        freeMode: true,
+        slideToClickedSlide: false,
+        slidesPerView: 1,
+        spaceBetween: '4%',
+        rewind: false,
+        autoplay: {
+          delay: 3000,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: true,
+        },
+        mousewheel: {
+          forceToAxis: true,
+        },
+        keyboard: {
+          enabled: true,
+          onlyInViewport: true,
+        },
+        breakpoints: {
+          320: {
+            slidesPerView: 1,
+            spaceBetween: 10,
+          },
+          480: {
+            slidesPerView: 2,
+            spaceBetween: 10,
+          },
+          768: {
+            slidesPerView: 2,
+            spaceBetween: 15,
+          },
+          992: {
+            slidesPerView: 3,
+            spaceBetween: 20,
+          },
+        },
+        pagination: {
+          el: component.querySelector<HTMLElement>('.swiper-bullet-wrapper')!,
+          bulletActiveClass: 'is-active',
+          bulletClass: 'swiper-bullet',
+          bulletElement: 'button',
+          clickable: true,
+        },
+        navigation: {
+          nextEl: component.querySelector<HTMLElement>('.swiper-next')!,
+          prevEl: component.querySelector<HTMLElement>('.swiper-prev')!,
+          disabledClass: 'is-disabled',
+        },
+        slideActiveClass: 'is-active',
+        effect: 'slide',
+        speed: 600,
+      });
+
+      // Intersection Observer for autoplay
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              swiper.autoplay?.start();
+            } else {
+              swiper.autoplay?.stop();
+            }
+          });
+        },
+        {
+          threshold: 0.5,
+        }
       );
 
-      // Set initial state - mockup slightly visible
-      if (mockup) {
-        gsap.set(mockup, {
-          scale: 0.9,
-          opacity: 0.2,
-          xPercent: 10,
-          yPercent: 10,
-        });
-      }
-
-      column.addEventListener('mouseenter', () => {
-        // Animate mockup
-        if (mockup) {
-          gsap.to(mockup, {
-            scale: 1,
-            opacity: 1,
-            xPercent: 0,
-            yPercent: 0,
-            duration: 0.6,
-            ease: 'power3.out',
-          });
-        }
-
-        // Change background and text colors
-        gsap.to(column, {
-          backgroundColor: '#DDF1FF',
-          duration: 0.6,
-          ease: 'power3.out',
-        });
-
-        textElements.forEach((element) => {
-          gsap.to(element, {
-            color: '#000000',
-            duration: 0.6,
-            ease: 'power3.out',
-          });
-        });
-      });
-
-      column.addEventListener('mouseleave', () => {
-        // Animate mockup back
-        if (mockup) {
-          gsap.to(mockup, {
-            scale: 0.9,
-            opacity: 0.2,
-            xPercent: 10,
-            yPercent: 10,
-            duration: 0.6,
-            ease: 'power3.in',
-          });
-        }
-
-        // Revert background and text colors
-        gsap.to(column, {
-          backgroundColor: 'transparent',
-          duration: 0.6,
-          ease: 'power3.in',
-        });
-
-        textElements.forEach((element) => {
-          gsap.to(element, {
-            color: '#ffffff',
-            duration: 0.6,
-            ease: 'power3.in',
-          });
-        });
-      });
+      observer.observe(swiperElement);
     });
   }
-
-  // Set initial states
-  gsap.set('.sticky-heading-2', { yPercent: 0 });
-  gsap.set('.border-line_active', { width: 0 });
-
-  // First item animations
-  gsap.to('.sticky-heading-2', {
-    yPercent: 0,
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '.home-why_item:nth-child(1)',
-      start: 'top center',
-      end: 'bottom+=100% center',
-      scrub: true,
-    },
-  });
-
-  gsap.to('.home-why_item:nth-child(1) .border-line_active', {
-    width: '100%',
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '.home-why_item:nth-child(1)',
-      start: 'top center',
-      end: 'bottom+=100% center',
-      scrub: true,
-    },
-  });
-
-  // Second item animations
-  gsap.to('.sticky-heading-2', {
-    yPercent: 0,
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '.home-why_item:nth-child(2)',
-      start: 'top+=40% center',
-      end: 'bottom+=100% center',
-      scrub: true,
-    },
-  });
-
-  gsap.to('.home-why_item:nth-child(2) .border-line_active', {
-    width: '100%',
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '.home-why_item:nth-child(2)',
-      start: 'top+=120% center',
-      end: 'bottom+=200% center',
-      scrub: true,
-    },
-  });
-
-  // Third item animations
-  gsap.to('.sticky-heading-2', {
-    yPercent: -66.6,
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '.home-why_item:nth-child(3)',
-      start: 'top center',
-      end: 'bottom+=100% center',
-      scrub: true,
-    },
-  });
-
-  gsap.to('.home-why_item:nth-child(3) .border-line_active', {
-    width: '100%',
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '.home-why_item:nth-child(3)',
-      start: 'top+=120% center',
-      end: 'bottom+=200% center',
-      scrub: true,
-    },
-  });
-
-  // CTA section animations
-  gsap.set('.cta-mockup-wrapper.is-1', { yPercent: 100, opacity: 0 }); // Start below
-  gsap.set('.cta-mockup-wrapper:not(.is-1)', { yPercent: -100, opacity: 0 }); // Start above
-
-  gsap.to('.cta-mockup-wrapper.is-1', {
-    yPercent: 0,
-    opacity: 1,
-    duration: 1,
-    ease: 'power3.out',
-    scrollTrigger: {
-      trigger: '.section_cta',
-      start: 'top 70%',
-    },
-  });
-
-  gsap.to('.cta-mockup-wrapper:not(.is-1)', {
-    yPercent: 0,
-    opacity: 1,
-    duration: 1,
-    ease: 'power3.out',
-    scrollTrigger: {
-      trigger: '.section_cta',
-      start: 'top 70%',
-    },
-  });
-
-  // Subtle pulsing motion for CTA mockups
-  gsap.to('.cta-mockup-wrapper', {
-    scale: 1.05,
-    duration: 2,
-    ease: 'sine.inOut',
-    yoyo: true,
-    repeat: -1,
-    repeatDelay: 0.3,
-    transformOrigin: 'center center',
-  });
-
-  // Add grayscale effect for logos
-  const logos = document.querySelectorAll('.logo3_logo');
-
-  // Add the CSS styles programmatically
-  const logoStyleSheet = document.createElement('style');
-  logoStyleSheet.textContent = `
-    .logo3_logo {
-      filter: grayscale(100%);
-      opacity: 0.6;
-      transition: all 0.4s ease;
-    }
-    
-    .logo3_logo:hover {
-      filter: grayscale(0%);
-      opacity: 1;
-    }
-  `;
-  document.head.appendChild(logoStyleSheet);
-
-  // Optional: Add JavaScript hover effect if you want more control
-  logos.forEach((logo) => {
-    logo.addEventListener('mouseenter', () => {
-      gsap.to(logo, {
-        filter: 'grayscale(0%)',
-        opacity: 1,
-        duration: 0.4,
-        ease: 'power2.out',
-      });
-    });
-
-    logo.addEventListener('mouseleave', () => {
-      gsap.to(logo, {
-        filter: 'grayscale(100%)',
-        opacity: 0.6,
-        duration: 0.4,
-        ease: 'power2.out',
-      });
-    });
-  });
-
-  // Subtle floating animation for blur layers
-  gsap.to('.layer-blur', {
-    x: 40,
-    y: 40,
-    duration: 4,
-    ease: 'sine.inOut',
-    yoyo: true,
-    repeat: -1,
-    transformOrigin: 'center center',
-  });
-
-  gsap.to('.layer-blur-2', {
-    x: -40,
-    y: -30,
-    duration: 3.5,
-    ease: 'sine.inOut',
-    yoyo: true,
-    repeat: -1,
-    transformOrigin: 'center center',
-  });
-
-  // Testimonial vertical scroll animation
-  const testimonialContainer = document.querySelector('.testimonial-container');
-  const testimonialWrapper = document.querySelector('.testimonial-collection_wrapper');
-
-  if (testimonialContainer && testimonialWrapper) {
-    // Get the distance that needs to be scrolled
-    // This is the difference between container height and wrapper height
-    const containerHeight = (testimonialContainer as HTMLElement).offsetHeight;
-    const wrapperHeight = (testimonialWrapper as HTMLElement).offsetHeight;
-    const scrollDistance = containerHeight - wrapperHeight;
-
-    // Create the scrolling animation
-    gsap.to(testimonialContainer, {
-      y: -scrollDistance, // Negative value for upward motion
-      duration: 45, // Adjust duration as needed
-      ease: 'none',
-      repeat: -1,
-      scrollTrigger: {
-        trigger: testimonialWrapper,
-        start: 'top center',
-        end: 'bottom center',
-      },
-      onRepeat: () => {
-        // Jump back to start when animation repeats
-        gsap.set(testimonialContainer, { y: 0 });
-      },
-    });
-  }
-
-  // Set initial state for image wrapper
-  gsap.set('.header15_image-wrapper', {
-    opacity: 0,
-    y: 50,
-  });
-  gsap.set('.team4_item', {
-    opacity: 0,
-    y: 50,
-  });
-
-  // Animate image wrapper when it comes into view
-  gsap.to('.header15_image-wrapper', {
-    opacity: 1,
-    y: 0,
-    duration: 1,
-    ease: 'power3.out',
-    scrollTrigger: {
-      trigger: '.header15_image-wrapper',
-      start: 'top 80%',
-    },
-  });
-
-  // Animate team items with stagger when they come into view
-  gsap.to('.team4_item', {
-    opacity: 1,
-    y: 0,
-    duration: 1,
-    stagger: 0.2,
-    ease: 'power3.out',
-    scrollTrigger: {
-      trigger: '.team4_item',
-      start: 'top 80%',
-    },
-  });
 });
 
 function animateWords(): void {
@@ -652,50 +631,66 @@ function animateWords(): void {
   }
 
   const words: ColoredWord[] = [
-    { text: 'Secure', color: '#0fa4ff' }, // Coral red
-    { text: 'Visa-Ready', color: '#218491' }, // Turquoise
-    { text: 'Comfortably', color: '#36e7cb' }, // Sky blue
-    { text: 'Anywhere', color: '#0fa4ff' }, // Sage green
-    { text: 'Beyond', color: '#218491' }, // Purple
+    { text: 'Secure', color: '#7abfea' },
+    { text: 'Visa-Ready', color: '#7abfea' },
+    { text: 'Comfortably', color: '#7abfea' },
+    { text: 'Anywhere', color: '#7abfea' },
+    { text: 'Beyond', color: '#7abfea' },
   ];
 
   let currentIndex = 0;
   let split: SplitType | null = null;
 
   function updateText(): void {
+    if (currentIndex >= words.length) {
+      currentIndex = 0;
+    }
+
+    if (split) {
+      split.revert();
+    }
+
+    const word = words[currentIndex];
     if (!textElement) return;
+    textElement.textContent = word.text;
 
-    // Set both text and color
-    textElement.textContent = words[currentIndex].text;
-    textElement.style.color = words[currentIndex].color;
-    textElement.style.fontWeight = 'medium';
+    // Create new split after setting text
+    split = new SplitType(textElement, {
+      types: 'chars',
+      tagName: 'span',
+    });
 
-    split = new SplitType(textElement, { types: 'chars' });
-    if (split.chars) {
-      // Ensure each character inherits the color
-      split.chars.forEach((char) => {
-        (char as HTMLElement).style.color = words[currentIndex].color;
-      });
+    if (split?.chars) {
       animateChars(split.chars);
     }
-    currentIndex = (currentIndex + 1) % words.length;
+
+    currentIndex = currentIndex + 1;
   }
 
   function animateChars(chars: Element[]): void {
-    gsap.from(chars, {
-      yPercent: 100,
-      stagger: 0.03,
-      duration: 1.5,
-      ease: 'power4.out',
-      onComplete: () => {
-        if (split) {
-          split.revert();
-        }
+    // First, ensure any previous animation is complete
+    gsap.killTweensOf(chars);
+
+    // Simple fade in with stagger
+    gsap.fromTo(
+      chars,
+      {
+        opacity: 0,
       },
-    });
+      {
+        opacity: 1,
+        stagger: {
+          each: 0.09, // Increased stagger time between each char
+          from: 'start',
+        },
+        duration: 1, // Increased overall animation duration
+        ease: 'power2.out',
+      }
+    );
   }
 
-  setInterval(updateText, 3000);
+  // Adjust timing
+  setInterval(updateText, 2500);
 }
 
 // Add CSS for light beam effect
@@ -833,3 +828,226 @@ function initializeCityAutocomplete(): void {
 
 // Add to your existing DOMContentLoaded listener
 document.addEventListener('DOMContentLoaded', initializeCityAutocomplete);
+
+// Add this helper function at the top
+const elementExists = (selector: string): boolean => document.querySelector(selector) !== null;
+
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  // Remove or update the nav-image-wrapper-2 animation if the element doesn't exist
+  if (elementExists('.nav-image-wrapper-2')) {
+    gsap.to('.nav-image-wrapper-2', {
+      scale: 1.2,
+      duration: 0.8,
+      ease: 'power1.inOut',
+      yoyo: true,
+      repeat: -1,
+      transformOrigin: 'center center',
+    });
+  }
+
+  // Separate parallax effect
+  if (elementExists('.hero-image') && elementExists('.home-header_section')) {
+    gsap.to('.hero-image', {
+      yPercent: -120,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.home-header_section',
+        start: 'top top',
+        end: 'bottom center',
+        scrub: 0.5,
+      },
+    });
+  }
+
+  // Split texts for scroll animations - Add checks
+  const moveText = elementExists('.move-text') ? new SplitType('.move-text') : null;
+  const moveParagraph = elementExists('.move-paragraph') ? new SplitType('.move-paragraph') : null;
+  const aboutParagraph = elementExists('.about-paragraph')
+    ? new SplitType('.about-paragraph')
+    : null;
+  const teamParagraph = elementExists('.team-paragraph') ? new SplitType('.team-paragraph') : null;
+
+  // Create scroll-triggered animations for move section - with checks
+  if (moveText?.lines) {
+    gsap.set(moveText.lines, { opacity: 0, yPercent: 100 });
+    gsap.to(moveText.lines, {
+      opacity: 1,
+      yPercent: 0,
+      duration: 1,
+      stagger: 0.2,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.section_home-locations',
+        start: 'top+=20% 70%',
+      },
+    });
+  }
+
+  if (moveParagraph?.lines) {
+    gsap.set(moveParagraph.lines, { opacity: 0, xPercent: 20 });
+    gsap.to(moveParagraph.lines, {
+      opacity: 1,
+      xPercent: 0,
+      duration: 1,
+      stagger: 0.2,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.section_home-locations',
+        start: 'top+=20% 60%',
+      },
+    });
+  }
+
+  if (aboutParagraph?.lines) {
+    gsap.set(aboutParagraph.lines, { opacity: 0, xPercent: 20 });
+    gsap.to(aboutParagraph.lines, {
+      opacity: 1,
+      xPercent: 0,
+      duration: 1,
+      stagger: 0.2,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.about-paragraph',
+        start: 'top+=20% 60%',
+      },
+    });
+  }
+
+  if (teamParagraph?.lines) {
+    gsap.set(teamParagraph.lines, { opacity: 0, xPercent: 20 });
+    gsap.to(teamParagraph.lines, {
+      opacity: 1,
+      xPercent: 0,
+      duration: 1,
+      stagger: 0.2,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.team-paragraph',
+        start: 'top+=20% 60%',
+      },
+    });
+  }
+
+  // Header and team animations - Add checks
+  if (elementExists('.header15_image-wrapper')) {
+    gsap.set('.header15_image-wrapper', {
+      opacity: 0,
+      y: 50,
+    });
+    gsap.to('.header15_image-wrapper', {
+      opacity: 1,
+      y: 0,
+      duration: 1,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.header15_image-wrapper',
+        start: 'top 80%',
+      },
+    });
+  }
+
+  if (elementExists('.team4_item')) {
+    gsap.set('.team4_item', {
+      opacity: 0,
+      y: 50,
+    });
+    gsap.to('.team4_item', {
+      opacity: 1,
+      y: 0,
+      duration: 1,
+      stagger: 0.2,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.team4_item',
+        start: 'top 80%',
+      },
+    });
+  }
+});
+
+// Time ago function for testimonials
+function initializeTimeAgo(): void {
+  function timeAgo(dateStr: string): string {
+    try {
+      const date = new Date(dateStr);
+      const now = new Date();
+
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+
+      const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+      // Return appropriate time string
+      if (seconds < 60) {
+        return 'just now';
+      }
+
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) {
+        return minutes === 1 ? '1 min ago' : `${minutes} mins ago`;
+      }
+
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) {
+        return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+      }
+
+      const days = Math.floor(hours / 24);
+      if (days < 7) {
+        return days === 1 ? '1 day ago' : `${days} days ago`;
+      }
+
+      const weeks = Math.floor(days / 7);
+      if (weeks < 4) {
+        return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+      }
+
+      const months = Math.floor(days / 30.44);
+      if (months < 12) {
+        return months === 1 ? '1 month ago' : `${months} months ago`;
+      }
+
+      const years = Math.floor(months / 12);
+      return years === 1 ? '1 year ago' : `${years} years ago`;
+    } catch {
+      return 'Invalid date';
+    }
+  }
+
+  function updateTimes(): void {
+    const timeElements = document.querySelectorAll<HTMLElement>('.time-ago');
+
+    timeElements.forEach((el) => {
+      // Get or store original date
+      let originalDate = el.getAttribute('data-original-date');
+
+      if (!originalDate) {
+        // First time - store the original date
+        originalDate = el.textContent?.trim() ?? null;
+        if (originalDate) {
+          el.setAttribute('data-original-date', originalDate);
+        }
+      }
+
+      if (originalDate) {
+        const timeAgoText = timeAgo(originalDate);
+        el.textContent = timeAgoText;
+      }
+    });
+  }
+
+  // Initial update
+  updateTimes();
+
+  // Update every minute
+  setInterval(updateTimes, 60000);
+}
+
+// Add to your Webflow.push
+window.Webflow ||= [];
+window.Webflow.push(() => {
+  initializeTimeAgo();
+});
