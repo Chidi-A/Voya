@@ -1,5 +1,15 @@
 # voya
 
+## 1.2.0
+
+### Minor Changes
+
+- 65bafb7: Did the second iteration of client request
+
+### Patch Changes
+
+- cd2075c: Fix lint errors and add changeset for ESLint config update
+
 ## 1.1.0
 
 ### Minor Changes
