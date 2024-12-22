@@ -43,6 +43,36 @@ requestAnimationFrame(raf);
 
 window.Webflow ||= [];
 window.Webflow.push(() => {
+  animateWords();
+  initializeSwiper();
+
+  // Paste testimonial animation here, outside if/else
+  // Testimonial vertical scroll animation
+  const testimonialContainer = document.querySelector('.testimonial-container');
+  const testimonialWrapper = document.querySelector('.testimonial-collection_wrapper');
+
+  if (testimonialContainer && testimonialWrapper) {
+    const containerHeight = (testimonialContainer as HTMLElement).offsetHeight;
+    const wrapperHeight = (testimonialWrapper as HTMLElement).offsetHeight;
+    const scrollDistance = containerHeight - wrapperHeight;
+
+    // Create the scrolling animation
+    gsap.to(testimonialContainer, {
+      y: -scrollDistance,
+      duration: isMobile() ? 25 : 45, // Faster on mobile
+      ease: 'none',
+      repeat: -1,
+      scrollTrigger: {
+        trigger: testimonialWrapper,
+        start: 'top center',
+        end: 'bottom center',
+      },
+      onRepeat: () => {
+        gsap.set(testimonialContainer, { y: 0 });
+      },
+    });
+  }
+
   if (isMobile()) {
     // Completely disable ScrollTrigger for certain animations on mobile
     ScrollTrigger.getAll().forEach((trigger) => {
@@ -134,8 +164,8 @@ window.Webflow.push(() => {
   } else {
     animateWords();
     // Initialize split text elements
-    const headingText = !isMobile() ? new SplitType('h1') : null;
-    const paragraphText = !isMobile() ? new SplitType('.hero-paragraph') : null;
+    const headingText = new SplitType('h1');
+    const paragraphText = new SplitType('.hero-paragraph');
     const tl = gsap.timeline();
 
     // Set initial states for all elements
@@ -448,35 +478,6 @@ window.Webflow.push(() => {
       transformOrigin: 'center center',
     });
 
-    // Testimonial vertical scroll animation
-    const testimonialContainer = document.querySelector('.testimonial-container');
-    const testimonialWrapper = document.querySelector('.testimonial-collection_wrapper');
-
-    if (testimonialContainer && testimonialWrapper) {
-      // Get the distance that needs to be scrolled
-      // This is the difference between container height and wrapper height
-      const containerHeight = (testimonialContainer as HTMLElement).offsetHeight;
-      const wrapperHeight = (testimonialWrapper as HTMLElement).offsetHeight;
-      const scrollDistance = containerHeight - wrapperHeight;
-
-      // Create the scrolling animation
-      gsap.to(testimonialContainer, {
-        y: -scrollDistance, // Negative value for upward motion
-        duration: 45, // Adjust duration as needed
-        ease: 'none',
-        repeat: -1,
-        scrollTrigger: {
-          trigger: testimonialWrapper,
-          start: 'top center',
-          end: 'bottom center',
-        },
-        onRepeat: () => {
-          // Jump back to start when animation repeats
-          gsap.set(testimonialContainer, { y: 0 });
-        },
-      });
-    }
-
     // Set initial state for image wrapper
     gsap.set('.header15_image-wrapper', {
       opacity: 0,
@@ -523,96 +524,6 @@ window.Webflow.push(() => {
       }
     `;
     document.head.appendChild(performanceStyles);
-
-    // Initialize Swiper
-    const sliderComponents = document.querySelectorAll<HTMLElement>('.slider-main_component');
-
-    sliderComponents.forEach((component) => {
-      const loopMode = component.getAttribute('loop-mode') === 'true';
-      // Remove or use sliderDuration
-      // const sliderDuration = component.getAttribute('slider-duration')
-      //   ? parseInt(component.getAttribute('slider-duration')!)
-      //   : 300;
-
-      const swiperElement = component.querySelector<HTMLElement>('.swiper');
-      if (!swiperElement) return;
-
-      const swiper = new Swiper(swiperElement, {
-        modules: [Autoplay, Pagination, Navigation, Mousewheel, Keyboard],
-        loop: loopMode,
-        autoHeight: false,
-        centeredSlides: loopMode,
-        followFinger: true,
-        freeMode: true,
-        slideToClickedSlide: false,
-        slidesPerView: 1,
-        spaceBetween: '4%',
-        rewind: false,
-        autoplay: {
-          delay: 3000,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: true,
-        },
-        mousewheel: {
-          forceToAxis: true,
-        },
-        keyboard: {
-          enabled: true,
-          onlyInViewport: true,
-        },
-        breakpoints: {
-          320: {
-            slidesPerView: 1,
-            spaceBetween: 10,
-          },
-          480: {
-            slidesPerView: 2,
-            spaceBetween: 10,
-          },
-          768: {
-            slidesPerView: 2,
-            spaceBetween: 15,
-          },
-          992: {
-            slidesPerView: 3,
-            spaceBetween: 20,
-          },
-        },
-        pagination: {
-          el: component.querySelector<HTMLElement>('.swiper-bullet-wrapper')!,
-          bulletActiveClass: 'is-active',
-          bulletClass: 'swiper-bullet',
-          bulletElement: 'button',
-          clickable: true,
-        },
-        navigation: {
-          nextEl: component.querySelector<HTMLElement>('.swiper-next')!,
-          prevEl: component.querySelector<HTMLElement>('.swiper-prev')!,
-          disabledClass: 'is-disabled',
-        },
-        slideActiveClass: 'is-active',
-        effect: 'slide',
-        speed: 600,
-      });
-
-      // Intersection Observer for autoplay
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              swiper.autoplay?.start();
-            } else {
-              swiper.autoplay?.stop();
-            }
-          });
-        },
-        {
-          threshold: 0.5,
-        }
-      );
-
-      observer.observe(swiperElement);
-    });
   }
 });
 
@@ -1051,3 +962,90 @@ window.Webflow ||= [];
 window.Webflow.push(() => {
   initializeTimeAgo();
 });
+
+// Create a separate function for Swiper initialization
+function initializeSwiper(): void {
+  const sliderComponents = document.querySelectorAll<HTMLElement>('.slider-main_component');
+
+  sliderComponents.forEach((component) => {
+    const loopMode = component.getAttribute('loop-mode') === 'true';
+    const swiperElement = component.querySelector<HTMLElement>('.swiper');
+    if (!swiperElement) return;
+
+    const swiper = new Swiper(swiperElement, {
+      modules: [Autoplay, Pagination, Navigation, Mousewheel, Keyboard],
+      loop: loopMode,
+      autoHeight: false,
+      centeredSlides: loopMode,
+      followFinger: true,
+      freeMode: true,
+      slideToClickedSlide: false,
+      slidesPerView: 1,
+      spaceBetween: '4%',
+      rewind: false,
+      autoplay: {
+        delay: 3000,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true,
+      },
+      mousewheel: {
+        forceToAxis: true,
+      },
+      keyboard: {
+        enabled: true,
+        onlyInViewport: true,
+      },
+      breakpoints: {
+        320: {
+          slidesPerView: 1,
+          spaceBetween: 10,
+        },
+        480: {
+          slidesPerView: 2,
+          spaceBetween: 10,
+        },
+        768: {
+          slidesPerView: 2,
+          spaceBetween: 15,
+        },
+        992: {
+          slidesPerView: 3,
+          spaceBetween: 20,
+        },
+      },
+      pagination: {
+        el: component.querySelector<HTMLElement>('.swiper-bullet-wrapper')!,
+        bulletActiveClass: 'is-active',
+        bulletClass: 'swiper-bullet',
+        bulletElement: 'button',
+        clickable: true,
+      },
+      navigation: {
+        nextEl: component.querySelector<HTMLElement>('.swiper-next')!,
+        prevEl: component.querySelector<HTMLElement>('.swiper-prev')!,
+        disabledClass: 'is-disabled',
+      },
+      slideActiveClass: 'is-active',
+      effect: 'slide',
+      speed: 600,
+    });
+
+    // Intersection Observer for autoplay
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            swiper.autoplay?.start();
+          } else {
+            swiper.autoplay?.stop();
+          }
+        });
+      },
+      {
+        threshold: 0.5,
+      }
+    );
+
+    observer.observe(swiperElement);
+  });
+}
