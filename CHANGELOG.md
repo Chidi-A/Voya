@@ -1,5 +1,11 @@
 # voya
 
+## 1.3.2
+
+### Patch Changes
+
+- e96add8: Adjusted changes to Gsap on mobile
+
 ## 1.3.0
 
 ### Minor Changes
