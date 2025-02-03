@@ -1,5 +1,15 @@
 # voya
 
+## 1.3.0
+
+### Minor Changes
+
+- 0071ed3: Replaced some of the gsap code
+
+### Patch Changes
+
+- 2dbafe1: Adjusted the mobile gsap animation
+
 ## 1.2.0
 
 ### Minor Changes
