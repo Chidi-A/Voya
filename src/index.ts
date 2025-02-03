@@ -59,7 +59,7 @@ window.Webflow.push(() => {
     // Create the scrolling animation
     gsap.to(testimonialContainer, {
       y: -scrollDistance,
-      duration: isMobile() ? 25 : 45, // Faster on mobile
+      duration: isMobile() ? 60 : 45, // Slower on mobile
       ease: 'none',
       repeat: -1,
       scrollTrigger: {
@@ -459,9 +459,9 @@ window.Webflow.push(() => {
 
     // Subtle floating animation for blur layers
     gsap.to('.layer-blur', {
-      x: 100,
-      y: 100,
-      duration: 4,
+      x: 30,
+      y: 30,
+      duration: 6,
       ease: 'sine.inOut',
       yoyo: true,
       repeat: -1,
@@ -469,9 +469,9 @@ window.Webflow.push(() => {
     });
 
     gsap.to('.layer-blur-2', {
-      x: -100,
-      y: -100,
-      duration: 3.5,
+      x: -30,
+      y: -30,
+      duration: 5.5,
       ease: 'sine.inOut',
       yoyo: true,
       repeat: -1,
@@ -780,7 +780,7 @@ window.Webflow.push(() => {
   const teamParagraph = elementExists('.team-paragraph') ? new SplitType('.team-paragraph') : null;
 
   // Create scroll-triggered animations for move section - with checks
-  if (moveText?.lines) {
+  if (!isMobile() && moveText?.lines) {
     gsap.set(moveText.lines, { opacity: 0, yPercent: 100 });
     gsap.to(moveText.lines, {
       opacity: 1,
@@ -795,7 +795,7 @@ window.Webflow.push(() => {
     });
   }
 
-  if (moveParagraph?.lines) {
+  if (!isMobile() && moveParagraph?.lines) {
     gsap.set(moveParagraph.lines, { opacity: 0, xPercent: 20 });
     gsap.to(moveParagraph.lines, {
       opacity: 1,
@@ -810,7 +810,7 @@ window.Webflow.push(() => {
     });
   }
 
-  if (aboutParagraph?.lines) {
+  if (!isMobile() && aboutParagraph?.lines) {
     gsap.set(aboutParagraph.lines, { opacity: 0, xPercent: 20 });
     gsap.to(aboutParagraph.lines, {
       opacity: 1,
